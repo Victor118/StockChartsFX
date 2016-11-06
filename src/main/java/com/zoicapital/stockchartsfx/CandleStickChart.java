@@ -140,7 +140,7 @@ public class CandleStickChart extends XYChart<Number, Number> {
 	public XYChart.Series<Number, Number> refreshChart(int maxBarsToDisplay) {
 
 		setMaxBarsToDisplay(maxBarsToDisplay);
-		System.out.println(maxBarsToDisplay);
+		
 		XYChart.Series<Number, Number> series = new XYChart.Series<>();
         List<BarData> sublist = getSubList(bars, this.maxBarsToDisplay);
         int index = 0;
@@ -153,8 +153,8 @@ public class CandleStickChart extends XYChart<Number, Number> {
         
             series.getData().add(new XYChart.Data<>(bar.getIndex(), bar.getOpen(), bar));
             index++;
-           // logger.log(Level.INFO, "Adding bar with date/time: {0}", bar.getDateTime().getTime());
-           // logger.log(Level.INFO, "Adding bar with price: {0}", bar.getOpen());
+            logger.log(Level.INFO, "Adding bar with date/time: {0}", bar.getDateTime().getTime());
+            logger.log(Level.INFO, "Adding bar with price: {0}", bar.getOpen());
             
         }
 

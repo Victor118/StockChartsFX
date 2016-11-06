@@ -28,20 +28,28 @@ import javafx.stage.Stage;
 
 
 public class MainApp extends Application {
+	
 
+	private static final int MOUSE_WHEEL_INCR = 5;
+	private  int mouseWheels  =0;
+	
     @SuppressWarnings("restriction")
 	@Override
     public void start(Stage stage) throws Exception {
         CandleStickChart candleStickChart = new CandleStickChart("S&P 500 Index", buildBars(),200);
         System.out.println("scroll event !!");
-        candleStickChart.setOnScroll(event -> {
+       
+        candleStickChart.setOnScroll((event)->{
+        	MainApp.this.mouseWheels ++;
+        });
+        candleStickChart.setOnScrollFinished(event -> {
         	double deltaY = event.getDeltaY();
         	
         	if(deltaY >0){
         		
-        		candleStickChart.refreshChart(candleStickChart.getMaxBarsToDisplay() - 10);
+        		candleStickChart.refreshChart(candleStickChart.getMaxBarsToDisplay() - (MainApp.this.mouseWheels * MOUSE_WHEEL_INCR));
         	}else{
-        		candleStickChart.refreshChart(candleStickChart.getMaxBarsToDisplay() + 10);
+        		candleStickChart.refreshChart(candleStickChart.getMaxBarsToDisplay() + (MainApp.this.mouseWheels * MOUSE_WHEEL_INCR));
         	}
         });
         Scene scene = new Scene(candleStickChart);
