@@ -21,6 +21,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import javafx.animation.FadeTransition;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -28,7 +29,6 @@ import javafx.event.ActionEvent;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.chart.Axis;
-import javafx.scene.chart.CategoryAxis;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.Label;
@@ -49,15 +49,15 @@ import javafx.util.Duration;
  * 
  * 
  */
-public class CandleStickChart extends XYChart<String, Number> {
+public class CandleStickChart extends XYChart<Number, Number> {
 
     SimpleDateFormat sdf = new SimpleDateFormat("HH:mm");
     protected static final Logger logger = Logger.getLogger(CandleStickChart.class.getName());
     protected int maxBarsToDisplay;
-    protected ObservableList<XYChart.Series<String, Number>> dataSeries;
+    protected ObservableList<XYChart.Series<Number, Number>> dataSeries;
     protected BarData lastBar;
     protected NumberAxis yAxis;
-    protected CategoryAxis xAxis;
+    protected NumberAxis xAxis;
 
     
     
@@ -65,9 +65,22 @@ public class CandleStickChart extends XYChart<String, Number> {
      * 
      * @param title The chart title
      * @param bars  The bars data to display in the chart.
+     * @param interval interval between two bars (Period of the graph)
      */
+    
     public CandleStickChart(String title, List<BarData> bars) {
-        this(title, bars, Integer.MAX_VALUE);
+        this(title, bars, Integer.MAX_VALUE,Interval.DAY);
+    }
+    
+    /**
+     * 
+     * @param title The chart title
+     * @param bars  The bars data to display in the chart.
+     * @param interval interval between two bars (Period of the graph)
+     */
+    
+    public CandleStickChart(String title, List<BarData> bars,Interval interval) {
+        this(title, bars, Integer.MAX_VALUE,interval);
     }
 
     
@@ -76,9 +89,10 @@ public class CandleStickChart extends XYChart<String, Number> {
      * @param title The chart title
      * @param bars The bars to display in the chart
      * @param maxBarsToDisplay The maximum number of bars to display in the chart.
+     * @param interval interval between two bars (Period of the graph)
      */
-    public CandleStickChart(String title, List<BarData> bars, int maxBarsToDisplay) {
-        this(title, new CategoryAxis(), new NumberAxis(), bars, maxBarsToDisplay);
+    public CandleStickChart(String title, List<BarData> bars, int maxBarsToDisplay,Interval interval) {
+        this(title, new NumberAxis(), new NumberAxis(), bars, maxBarsToDisplay,interval);
     }
 
     /**
@@ -89,13 +103,15 @@ public class CandleStickChart extends XYChart<String, Number> {
      * @param yAxis The y axis to use
      * @param bars The bars to display on the chart
      * @param maxBarsToDisplay The maximum number of bars to display on the chart.
+     * @param interval interval between two bars (Period of the graph)
      */
-    public CandleStickChart(String title, CategoryAxis xAxis, NumberAxis yAxis, List<BarData> bars, int maxBarsToDisplay) {
+    public CandleStickChart(String title, NumberAxis xAxis, NumberAxis yAxis, List<BarData> bars, int maxBarsToDisplay,Interval interval) {
         super(xAxis, yAxis);
         this.xAxis = xAxis;
         this.yAxis = yAxis;
         this.maxBarsToDisplay = maxBarsToDisplay;
 
+        xAxis.autoRangingProperty().set(true);
         yAxis.autoRangingProperty().set(true);
         yAxis.forceZeroInRangeProperty().setValue(Boolean.FALSE);
         setTitle(title);
@@ -104,20 +120,29 @@ public class CandleStickChart extends XYChart<String, Number> {
         xAxis.setAnimated(true);
         yAxis.setAnimated(true);
         verticalGridLinesVisibleProperty().set(false);
-        XYChart.Series<String, Number> series = new XYChart.Series<>();
+        XYChart.Series<Number, Number> series = new XYChart.Series<>();
         List<BarData> sublist = getSubList(bars, maxBarsToDisplay);
+        int index = 0;
         for (BarData bar : sublist) {
             String label = "";
-            label = sdf.format(bar.getDateTime().getTime());
-            series.getData().add(new XYChart.Data<>(label, bar.getOpen(), bar));
+
+            label = bar.getDateTime().getTime().getTime()+"";
+            
+            bar.setIndex(index);
+        
+            series.getData().add(new XYChart.Data<>(bar.getIndex(), bar.getOpen(), bar));
+            index++;
             logger.log(Level.INFO, "Adding bar with date/time: {0}", bar.getDateTime().getTime());
             logger.log(Level.INFO, "Adding bar with price: {0}", bar.getOpen());
+            
         }
 
         dataSeries = FXCollections.observableArrayList(series);
 
         setData(dataSeries);
         lastBar = sublist.get(sublist.size() - 1);
+        
+        xAxis.setTickLabelFormatter(new DateAxisFormatter(series));
     }
 
     
@@ -148,7 +173,8 @@ public class CandleStickChart extends XYChart<String, Number> {
         logger.log(Level.INFO, "Adding bar with formated time: {0}", label);
 
         lastBar = new BarData(bar.getDateTime(), bar.getClose(), bar.getClose(), bar.getClose(), bar.getClose(), 0);
-        Data<String, Number> data = new XYChart.Data<>(label, lastBar.getOpen(), lastBar);
+        lastBar.setIndex(datalength);
+        Data<Number, Number> data = new XYChart.Data<>(datalength, lastBar.getOpen(), lastBar);
         dataSeries.get(0).getData().add(data);
         
         
@@ -196,15 +222,15 @@ public class CandleStickChart extends XYChart<String, Number> {
         }
         // update candle positions
         for (int seriesIndex = 0; seriesIndex < getData().size(); seriesIndex++) {
-            Series<String, Number> series = getData().get(seriesIndex);
-            Iterator<Data<String, Number>> iter = getDisplayedDataIterator(series);
+            Series<Number, Number> series = getData().get(seriesIndex);
+            Iterator<Data<Number, Number>> iter = getDisplayedDataIterator(series);
             Path seriesPath = null;
             if (series.getNode() instanceof Path) {
                 seriesPath = (Path) series.getNode();
                 seriesPath.getElements().clear();
             }
             while (iter.hasNext()) {
-                Data<String, Number> item = iter.next();
+                Data<Number, Number> item = iter.next();
                 double x = getXAxis().getDisplayPosition(getCurrentDisplayedXValue(item));
                 double y = getYAxis().getDisplayPosition(getCurrentDisplayedYValue(item));
                 Node itemNode = item.getNode();
@@ -216,6 +242,13 @@ public class CandleStickChart extends XYChart<String, Number> {
                     double high = getYAxis().getDisplayPosition(bar.getHigh());
                     double low = getYAxis().getDisplayPosition(bar.getLow());
                     double candleWidth = 10;
+                    if (getXAxis() instanceof NumberAxis) {
+                    	
+                        NumberAxis xa = (NumberAxis) getXAxis();
+
+                        candleWidth = xa.getDisplayPosition(1) * 0.8; // use 80% width between ticks
+
+                    }
                     // update candle
                     candle.update(close - y, high - y, low - y, candleWidth);
 
@@ -232,11 +265,11 @@ public class CandleStickChart extends XYChart<String, Number> {
     }
 
     @Override
-    protected void dataItemChanged(Data<String, Number> item) {
+    protected void dataItemChanged(Data<Number, Number> item) {
     }
 
     @Override
-    protected void dataItemAdded(Series<String, Number> series, int itemIndex, Data<String, Number> item) {
+    protected void dataItemAdded(Series<Number, Number> series, int itemIndex, Data<Number, Number> item) {
         Node candle = createCandle(getData().indexOf(series), item, itemIndex);
         if (shouldAnimate()) {
             candle.setOpacity(0);
@@ -255,7 +288,7 @@ public class CandleStickChart extends XYChart<String, Number> {
     }
 
     @Override
-    protected void dataItemRemoved(Data<String, Number> item, Series<String, Number> series) {
+    protected void dataItemRemoved(Data<Number, Number> item, Series<Number, Number> series) {
         final Node candle = item.getNode();
         if (shouldAnimate()) {
             // fade out old candle
@@ -271,7 +304,7 @@ public class CandleStickChart extends XYChart<String, Number> {
     }
 
     @Override
-    protected void seriesAdded(Series<String, Number> series, int seriesIndex) {
+    protected void seriesAdded(Series<Number, Number> series, int seriesIndex) {
         // handle any data already in series
         for (int j = 0; j < series.getData().size(); j++) {
             Data item = series.getData().get(j);
@@ -295,9 +328,9 @@ public class CandleStickChart extends XYChart<String, Number> {
     }
 
     @Override
-    protected void seriesRemoved(Series<String, Number> series) {
+    protected void seriesRemoved(Series<Number, Number> series) {
         // remove all candle nodes
-        for (XYChart.Data<String, Number> d : series.getData()) {
+        for (XYChart.Data<Number, Number> d : series.getData()) {
             final Node candle = d.getNode();
             if (shouldAnimate()) {
                 // fade out old candle
@@ -343,9 +376,9 @@ public class CandleStickChart extends XYChart<String, Number> {
     protected void updateAxisRange() {
         // For candle stick chart we need to override this method as we need to let the axis know that they need to be able
         // to cover the whole area occupied by the high to low range not just its center data value
-        final Axis<String> xa = getXAxis();
+        final Axis<Number> xa = getXAxis();
         final Axis<Number> ya = getYAxis();
-        List<String> xData = null;
+        List<Number> xData = null;
         List<Number> yData = null;
         if (xa.isAutoRanging()) {
             xData = new ArrayList<>();
@@ -354,8 +387,8 @@ public class CandleStickChart extends XYChart<String, Number> {
             yData = new ArrayList<>();
         }
         if (xData != null || yData != null) {
-            for (Series<String, Number> series : getData()) {
-                for (Data<String, Number> data : series.getData()) {
+            for (Series<Number, Number> series : getData()) {
+                for (Data<Number, Number> data : series.getData()) {
                     if (xData != null) {
                         xData.add(data.getXValue());
                     }

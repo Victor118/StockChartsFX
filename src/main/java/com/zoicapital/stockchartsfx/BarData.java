@@ -38,7 +38,9 @@ public class BarData implements Serializable {
         TICK, SECOND, MINUTE, HOUR, DAY, WEEK, MONTH, YEAR
     };
 
-    protected double open;
+    protected long index;
+
+	protected double open;
     protected BigDecimal formattedOpen;
     protected double high;
     protected BigDecimal formattedHigh;
@@ -284,5 +286,13 @@ public class BarData implements Serializable {
         }
         return true;
     }
+    
+    public long getIndex() {
+		return index;
+	}
+
+	public void setIndex(long index) {
+		this.index = index;
+	}
     
 }
