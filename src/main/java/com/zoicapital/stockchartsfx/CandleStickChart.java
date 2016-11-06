@@ -242,6 +242,7 @@ public class CandleStickChart extends XYChart<Number, Number> {
                     double high = getYAxis().getDisplayPosition(bar.getHigh());
                     double low = getYAxis().getDisplayPosition(bar.getLow());
                     double candleWidth = 10;
+                    //candle width need to be resized in function of the size of the XAxis
                     if (getXAxis() instanceof NumberAxis) {
                     	
                         NumberAxis xa = (NumberAxis) getXAxis();
