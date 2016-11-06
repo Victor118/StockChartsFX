@@ -58,6 +58,7 @@ public class CandleStickChart extends XYChart<Number, Number> {
     protected BarData lastBar;
     protected NumberAxis yAxis;
     protected NumberAxis xAxis;
+    protected List<BarData> bars;
 
     
     
@@ -70,6 +71,17 @@ public class CandleStickChart extends XYChart<Number, Number> {
     
     public CandleStickChart(String title, List<BarData> bars) {
         this(title, bars, Integer.MAX_VALUE,Interval.DAY);
+    }
+    
+    /**
+     * 
+     * @param title The chart title
+     * @param bars  The bars data to display in the chart.
+     * @param interval interval between two bars (Period of the graph)
+     */
+    
+    public CandleStickChart(String title, List<BarData> bars,int maxBarsToDisplay) {
+        this(title, bars,maxBarsToDisplay,Interval.DAY);
     }
     
     /**
@@ -110,18 +122,27 @@ public class CandleStickChart extends XYChart<Number, Number> {
         this.xAxis = xAxis;
         this.yAxis = yAxis;
         this.maxBarsToDisplay = maxBarsToDisplay;
-
+        this.bars = bars;
         xAxis.autoRangingProperty().set(true);
         yAxis.autoRangingProperty().set(true);
         yAxis.forceZeroInRangeProperty().setValue(Boolean.FALSE);
         setTitle(title);
-        setAnimated(true);
+        setAnimated(false);
         getStylesheets().add(getClass().getResource("/styles/CandleStickChartStyles.css").toExternalForm());
-        xAxis.setAnimated(true);
-        yAxis.setAnimated(true);
+        xAxis.setAnimated(false);
+        yAxis.setAnimated(false);
         verticalGridLinesVisibleProperty().set(false);
-        XYChart.Series<Number, Number> series = new XYChart.Series<>();
-        List<BarData> sublist = getSubList(bars, maxBarsToDisplay);
+        XYChart.Series<Number, Number> series = refreshChart(maxBarsToDisplay);
+        
+        xAxis.setTickLabelFormatter(new DateAxisFormatter(series));
+    }
+
+	public XYChart.Series<Number, Number> refreshChart(int maxBarsToDisplay) {
+
+		setMaxBarsToDisplay(maxBarsToDisplay);
+		System.out.println(maxBarsToDisplay);
+		XYChart.Series<Number, Number> series = new XYChart.Series<>();
+        List<BarData> sublist = getSubList(bars, this.maxBarsToDisplay);
         int index = 0;
         for (BarData bar : sublist) {
             String label = "";
@@ -132,8 +153,8 @@ public class CandleStickChart extends XYChart<Number, Number> {
         
             series.getData().add(new XYChart.Data<>(bar.getIndex(), bar.getOpen(), bar));
             index++;
-            logger.log(Level.INFO, "Adding bar with date/time: {0}", bar.getDateTime().getTime());
-            logger.log(Level.INFO, "Adding bar with price: {0}", bar.getOpen());
+           // logger.log(Level.INFO, "Adding bar with date/time: {0}", bar.getDateTime().getTime());
+           // logger.log(Level.INFO, "Adding bar with price: {0}", bar.getOpen());
             
         }
 
@@ -141,12 +162,25 @@ public class CandleStickChart extends XYChart<Number, Number> {
 
         setData(dataSeries);
         lastBar = sublist.get(sublist.size() - 1);
-        
-        xAxis.setTickLabelFormatter(new DateAxisFormatter(series));
-    }
+		return series;
+	}
 
     
-    /**
+    private void setMaxBarsToDisplay(int maxBarsToDisplay) {
+		if(maxBarsToDisplay < Integer.MAX_VALUE && maxBarsToDisplay > 0){
+			this.maxBarsToDisplay = maxBarsToDisplay;
+		}
+		if(maxBarsToDisplay > bars.size()){
+			this.maxBarsToDisplay = bars.size();
+		}
+	}
+
+	public int getMaxBarsToDisplay() {
+		return maxBarsToDisplay;
+	}
+
+
+	/**
      * Defines a formatter to use when formatting the y-axis values.
      * @param formatter The formatter to use when formatting the y-axis values.
      */
@@ -203,6 +237,9 @@ public class CandleStickChart extends XYChart<Number, Number> {
     
     protected List<BarData> getSubList(List<BarData> bars, int maxBars) {
         List<BarData> sublist;
+        if(maxBars < 0){
+        	maxBars = 1;
+        }
         if (bars.size() > maxBars) {
             return bars.subList(bars.size() - 1 - maxBars, bars.size() - 1);
         } else {

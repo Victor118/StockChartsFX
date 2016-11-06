@@ -29,9 +29,21 @@ import javafx.stage.Stage;
 
 public class MainApp extends Application {
 
-    @Override
+    @SuppressWarnings("restriction")
+	@Override
     public void start(Stage stage) throws Exception {
-        CandleStickChart candleStickChart = new CandleStickChart("S&P 500 Index", buildBars());
+        CandleStickChart candleStickChart = new CandleStickChart("S&P 500 Index", buildBars(),200);
+        System.out.println("scroll event !!");
+        candleStickChart.setOnScroll(event -> {
+        	double deltaY = event.getDeltaY();
+        	
+        	if(deltaY >0){
+        		
+        		candleStickChart.refreshChart(candleStickChart.getMaxBarsToDisplay() - 10);
+        	}else{
+        		candleStickChart.refreshChart(candleStickChart.getMaxBarsToDisplay() + 10);
+        	}
+        });
         Scene scene = new Scene(candleStickChart);
         scene.getStylesheets().add("/styles/CandleStickChartStyles.css");
         
@@ -49,7 +61,7 @@ public class MainApp extends Application {
 
         final List<BarData> bars = new ArrayList<>();
         GregorianCalendar now = new GregorianCalendar();
-        for (int i = 0; i < 175; i++) {
+        for (int i = 0; i < 365; i++) {
             double open = getNewValue(previousClose);
             double close = getNewValue(open);
             double high = Math.max(open + getRandom(),close);
