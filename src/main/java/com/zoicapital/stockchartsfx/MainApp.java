@@ -49,7 +49,7 @@ public class MainApp extends Application {
 
         final List<BarData> bars = new ArrayList<>();
         GregorianCalendar now = new GregorianCalendar();
-        for (int i = 0; i < 26; i++) {
+        for (int i = 0; i < 175; i++) {
             double open = getNewValue(previousClose);
             double close = getNewValue(open);
             double high = Math.max(open + getRandom(),close);
@@ -57,7 +57,7 @@ public class MainApp extends Application {
             previousClose = close;
             
             BarData bar = new BarData((GregorianCalendar) now.clone(), open, high, low, close, 1);
-            now.add(Calendar.MINUTE, 5);
+            now.add(Calendar.HOUR, 24);
             bars.add(bar);
         }
         return bars;
