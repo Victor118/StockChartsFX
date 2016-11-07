@@ -33,7 +33,6 @@ public class MainApp extends Application {
 	@Override
     public void start(Stage stage) throws Exception {
         CandleStickChart candleStickChart = new CandleStickChart("S&P 500 Index", buildBars(),100);
-        System.out.println("scroll event !!");
         candleStickChart.setOnScroll(event -> {
         	double deltaY = event.getDeltaY();
         	

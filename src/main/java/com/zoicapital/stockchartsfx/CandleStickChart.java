@@ -141,7 +141,6 @@ public class CandleStickChart extends XYChart<Number, Number> {
     }
     
     public void addToLowerBound(int i){
-    	System.out.println("change lower bound !!");
     	double newLowerBound = this.xAxis.getLowerBound() + i;
 		if(newLowerBound>0 && newLowerBound < xAxis.getUpperBound()){
 			this.xAxis.setLowerBound(newLowerBound);
@@ -315,7 +314,6 @@ public class CandleStickChart extends XYChart<Number, Number> {
                         NumberAxis xa = (NumberAxis) getXAxis();
 
                         double tickWidth = xa.getDisplayPosition(xa.getLowerBound()+ 1);
-                        System.out.println("tickWidth : "+tickWidth);
 						candleWidth = tickWidth * 0.8; // use 80% width between ticks
 
                     }
