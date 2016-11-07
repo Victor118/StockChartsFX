@@ -32,16 +32,17 @@ public class MainApp extends Application {
     @SuppressWarnings("restriction")
 	@Override
     public void start(Stage stage) throws Exception {
-        CandleStickChart candleStickChart = new CandleStickChart("S&P 500 Index", buildBars(),200);
+        CandleStickChart candleStickChart = new CandleStickChart("S&P 500 Index", buildBars(),100);
         System.out.println("scroll event !!");
         candleStickChart.setOnScroll(event -> {
         	double deltaY = event.getDeltaY();
         	
         	if(deltaY >0){
-        		
-        		candleStickChart.refreshChart(candleStickChart.getMaxBarsToDisplay() - 10);
+        		candleStickChart.addToLowerBound(-20);
+        		//candleStickChart.refreshChart(candleStickChart.getMaxBarsToDisplay() - 10);
         	}else{
-        		candleStickChart.refreshChart(candleStickChart.getMaxBarsToDisplay() + 10);
+        		candleStickChart.addToLowerBound(20);
+        		//candleStickChart.refreshChart(candleStickChart.getMaxBarsToDisplay() + 10);
         	}
         });
         Scene scene = new Scene(candleStickChart);

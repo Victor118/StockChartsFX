@@ -123,9 +123,12 @@ public class CandleStickChart extends XYChart<Number, Number> {
         this.yAxis = yAxis;
         this.maxBarsToDisplay = maxBarsToDisplay;
         this.bars = bars;
-        xAxis.autoRangingProperty().set(true);
+		xAxis.autoRangingProperty().setValue(false);
+		xAxis.autoRangingProperty().set(false);
         yAxis.autoRangingProperty().set(true);
         yAxis.forceZeroInRangeProperty().setValue(Boolean.FALSE);
+        xAxis.setForceZeroInRange(Boolean.FALSE);
+
         setTitle(title);
         setAnimated(false);
         getStylesheets().add(getClass().getResource("/styles/CandleStickChartStyles.css").toExternalForm());
@@ -136,13 +139,39 @@ public class CandleStickChart extends XYChart<Number, Number> {
         
         xAxis.setTickLabelFormatter(new DateAxisFormatter(series));
     }
+    
+    public void addToLowerBound(int i){
+    	System.out.println("change lower bound !!");
+    	double newLowerBound = this.xAxis.getLowerBound() + i;
+		if(newLowerBound>0 && newLowerBound < xAxis.getUpperBound()){
+			this.xAxis.setLowerBound(newLowerBound);
+	    	this.maxBarsToDisplay = this.maxBarsToDisplay + i;
+	    	layoutPlotChildren();
+		}
 
+
+    }
+
+    /**
+     * build the chart with maxBarsToDisplay
+     * @param maxBarsToDisplay the new maxBarsToDisplay
+     * @return
+     */
 	public XYChart.Series<Number, Number> refreshChart(int maxBarsToDisplay) {
 
 		setMaxBarsToDisplay(maxBarsToDisplay);
-		
+		xAxis.setTickUnit(10);
+        if(bars.size() > maxBarsToDisplay){
+        	xAxis.setLowerBound(bars.size() - maxBarsToDisplay);
+        	xAxis.setUpperBound(bars.size());
+        }else{
+        	
+        	xAxis.setLowerBound(0);
+        	xAxis.setUpperBound(bars.size());
+        }
 		XYChart.Series<Number, Number> series = new XYChart.Series<>();
-        List<BarData> sublist = getSubList(bars, this.maxBarsToDisplay);
+       // List<BarData> sublist = getSubList(bars, this.maxBarsToDisplay);
+		List<BarData> sublist = bars;
         int index = 0;
         for (BarData bar : sublist) {
             String label = "";
@@ -162,6 +191,7 @@ public class CandleStickChart extends XYChart<Number, Number> {
 
         setData(dataSeries);
         lastBar = sublist.get(sublist.size() - 1);
+        
 		return series;
 	}
 
@@ -284,7 +314,9 @@ public class CandleStickChart extends XYChart<Number, Number> {
                     	
                         NumberAxis xa = (NumberAxis) getXAxis();
 
-                        candleWidth = xa.getDisplayPosition(1) * 0.8; // use 80% width between ticks
+                        double tickWidth = xa.getDisplayPosition(xa.getLowerBound()+ 1);
+                        System.out.println("tickWidth : "+tickWidth);
+						candleWidth = tickWidth * 0.8; // use 80% width between ticks
 
                     }
                     // update candle
